@@ -1,12 +1,12 @@
 # خانه‌حساب / Phinance
 
-A simple Persian, RTL family finance tracker. It records accounts, income, expenses, transfers, assets, and gold without accounting jargon.
+A simple Persian, RTL family finance tracker. It records accounts, income, expenses, transfers, assets, gold, expected payments, bills, debts, and loans, with an Insights page and in-app alerts.
 
 Stack: React 19, Vite 6, Tailwind CSS 4, Django 5.2, Django REST Framework, SQLite.
 
 ## Docker / Codespaces development
 
-Run `docker compose up --build`. Open `http://localhost:5173`. Compose supplies safe development defaults, runs migrations at backend startup, and starts both services. To use a custom secret or host settings, copy `.env.example` to `.env` and update it. Create a first user with `docker compose exec backend python manage.py createsuperuser`, then sign in on the web page. Changes in `frontend/` and `backend/` are mounted into the running containers. The database persists in the `sqlite_data` volume.
+Copy `.env.example` to `.env` and set `NAVASAN_API_KEY` to your Navasan key. Then run `docker compose up --build`. Open `http://localhost:5173`. Compose starts the frontend, API, and gold price updater, and runs migrations at backend startup. Create a first user with `docker compose exec backend python manage.py createsuperuser`, then sign in on the web page. Changes in `frontend/` and `backend/` are mounted into the running containers. The database persists in the `sqlite_data` volume. Gold prices are refreshed every 12 hours with one Navasan API request per refresh.
 
 In GitHub Codespaces, open the repository in its dev container. The repository is mounted at `/workspace`; both services start through Compose and ports 5173 and 8000 are forwarded. Create the first user with `docker compose exec backend python manage.py createsuperuser`. The default CSRF setting accepts Codespaces preview origins. If you use another remote development domain, add its origin to `DJANGO_CSRF_TRUSTED_ORIGINS`.
 

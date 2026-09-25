@@ -1,3 +1,4 @@
 Django>=5.2,<5.3
 djangorestframework>=3.16,<3.17
 django-cors-headers>=4.7,<5
+jdatetime>=6.0,<7
