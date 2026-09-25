@@ -1,0 +1,159 @@
+Watching for file changes with StatReloader
+[25/Sep/2026 19:04:02] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:08:28] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+Forbidden: /api/auth/me/
+[25/Sep/2026 19:08:28] "GET /api/auth/me/ HTTP/1.1" 403 85
+[25/Sep/2026 19:08:31] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+Forbidden: /api/auth/me/
+[25/Sep/2026 19:08:31] "GET /api/auth/me/ HTTP/1.1" 403 85
+Forbidden (Origin checking failed - http://127.0.0.1:5173 does not match any trusted origins.): /api/auth/login/
+[25/Sep/2026 19:08:44] "POST /api/auth/login/ HTTP/1.1" 403 2567
+Forbidden (Origin checking failed - http://127.0.0.1:5173 does not match any trusted origins.): /api/auth/login/
+[25/Sep/2026 19:08:51] "POST /api/auth/login/ HTTP/1.1" 403 2567
+Forbidden (Origin checking failed - http://127.0.0.1:5173 does not match any trusted origins.): /api/auth/login/
+[25/Sep/2026 19:08:53] "POST /api/auth/login/ HTTP/1.1" 403 2567
+Not Found: /
+[25/Sep/2026 19:09:08] "GET / HTTP/1.1" 404 2304
+Not Found: /.well-known/appspecific/com.chrome.devtools.json
+[25/Sep/2026 19:09:08] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 2466
+Not Found: /favicon.ico
+[25/Sep/2026 19:09:09] "GET /favicon.ico HTTP/1.1" 404 2355
+[25/Sep/2026 19:09:20] "GET /api HTTP/1.1" 301 0
+Forbidden: /api/
+[25/Sep/2026 19:09:20] "GET /api/ HTTP/1.1" 403 4973
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 200 3426
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/css/default.css HTTP/1.1" 200 1152
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/csrf.js HTTP/1.1" 200 1793
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 200 39680
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 200 121457
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 200 13632
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 200 59
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/default.js HTTP/1.1" 200 1268
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/css/prettify.css HTTP/1.1" 200 817
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/img/grid.png HTTP/1.1" 200 1458
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 200 3796
+[25/Sep/2026 19:09:21] "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 200 87533
+[25/Sep/2026 19:09:28] "GET /admin HTTP/1.1" 301 0
+[25/Sep/2026 19:09:28] "GET /admin/ HTTP/1.1" 302 0
+[25/Sep/2026 19:09:29] "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4435
+[25/Sep/2026 19:09:29] "GET /static/admin/css/login.css HTTP/1.1" 200 951
+[25/Sep/2026 19:09:29] "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+[25/Sep/2026 19:09:29] "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+[25/Sep/2026 19:09:29] "GET /static/admin/css/rtl.css HTTP/1.1" 200 4772
+[25/Sep/2026 19:09:29] "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+[25/Sep/2026 19:09:29] "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+[25/Sep/2026 19:09:29] "GET /static/admin/css/responsive_rtl.css HTTP/1.1" 200 1991
+[25/Sep/2026 19:09:29] "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+[25/Sep/2026 19:09:29] "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+[25/Sep/2026 19:11:20] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+Forbidden (Origin checking failed - http://127.0.0.1:5173 does not match any trusted origins.): /api/auth/login/
+[25/Sep/2026 19:11:20] "POST /api/auth/login/ HTTP/1.1" 403 2567
+[25/Sep/2026 19:11:20,694] - Broken pipe from ('127.0.0.1', 63064)
+D:\Phinance-1\backend\config\settings.py changed, reloading.
+Watching for file changes with StatReloader
+[25/Sep/2026 19:12:34] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:12:35] "POST /api/auth/login/ HTTP/1.1" 200 21
+[25/Sep/2026 19:12:35,023] - Broken pipe from ('127.0.0.1', 53302)
+[25/Sep/2026 19:13:38] "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+[25/Sep/2026 19:13:38] "GET /admin/ HTTP/1.1" 200 6562
+[25/Sep/2026 19:13:39] "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+[25/Sep/2026 19:13:39] "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+[25/Sep/2026 19:13:39] "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+[25/Sep/2026 19:13:50] "GET /admin/auth/user/ HTTP/1.1" 200 12639
+[25/Sep/2026 19:13:50] "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+[25/Sep/2026 19:13:50] "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+[25/Sep/2026 19:13:50] "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+[25/Sep/2026 19:13:50] "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+[25/Sep/2026 19:13:50] "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+[25/Sep/2026 19:13:50] "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+[25/Sep/2026 19:13:50] "GET /admin/jsi18n/ HTTP/1.1" 200 12738
+[25/Sep/2026 19:13:50] "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+[25/Sep/2026 19:13:50] "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+[25/Sep/2026 19:13:50] "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+[25/Sep/2026 19:13:50] "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+[25/Sep/2026 19:13:50] "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+[25/Sep/2026 19:13:50] "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+[25/Sep/2026 19:13:50] "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+[25/Sep/2026 19:13:51] "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+[25/Sep/2026 19:13:51] "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+[25/Sep/2026 19:13:51] "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+[25/Sep/2026 19:16:41] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+Forbidden: /api/auth/me/
+[25/Sep/2026 19:16:41] "GET /api/auth/me/ HTTP/1.1" 403 85
+[25/Sep/2026 19:16:50] "POST /api/auth/login/ HTTP/1.1" 200 21
+[25/Sep/2026 19:16:50] "GET /api/accounts/ HTTP/1.1" 200 2
+[25/Sep/2026 19:16:50] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:16:50] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:16:50] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:16:50] "GET /api/gold/summary/ HTTP/1.1" 200 93
+[25/Sep/2026 19:16:50] "GET /api/dashboard/ HTTP/1.1" 200 205
+[25/Sep/2026 19:16:50] "GET /api/gold-purchases/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:23] "POST /api/accounts/ HTTP/1.1" 201 214
+[25/Sep/2026 19:17:23] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:17:23] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:23] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:23] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:17:23] "GET /api/gold/summary/ HTTP/1.1" 200 93
+[25/Sep/2026 19:17:23] "GET /api/dashboard/ HTTP/1.1" 200 217
+[25/Sep/2026 19:17:23] "GET /api/gold-purchases/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:50] "POST /api/gold-purchases/ HTTP/1.1" 201 163
+[25/Sep/2026 19:17:50] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:50] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:17:50] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:17:50] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:17:50] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:17:50] "GET /api/dashboard/ HTTP/1.1" 200 220
+[25/Sep/2026 19:17:50] "GET /api/gold/summary/ HTTP/1.1" 200 96
+[25/Sep/2026 19:18:10] "PUT /api/gold/price/ HTTP/1.1" 200 75
+[25/Sep/2026 19:18:10] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:18:10] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:18:10] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:18:10] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:18:10] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:18:10] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:18:10] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:22:29] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:22:29] "GET /api/auth/me/ HTTP/1.1" 200 71
+[25/Sep/2026 19:22:30] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:22:30] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:22:30] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:22:30] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:22:30] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:22:30] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:22:30] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:25:34] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:25:34] "GET /api/auth/me/ HTTP/1.1" 200 71
+[25/Sep/2026 19:25:34] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:25:34] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:25:34] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:25:34] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:25:34] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:25:34] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:25:34] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:25:46] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:25:46] "GET /api/auth/me/ HTTP/1.1" 200 71
+[25/Sep/2026 19:25:46] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:25:46] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:25:46] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:25:46] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:25:46] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:25:46] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:25:46] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:28:34] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:28:34] "GET /api/auth/me/ HTTP/1.1" 200 71
+[25/Sep/2026 19:28:34] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:28:34] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:28:34] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:28:34] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:28:34] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:28:34] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:28:34] "GET /api/gold-purchases/ HTTP/1.1" 200 165
+[25/Sep/2026 19:32:20] "GET /api/auth/csrf/ HTTP/1.1" 200 11
+[25/Sep/2026 19:32:20] "GET /api/auth/me/ HTTP/1.1" 200 71
+[25/Sep/2026 19:32:20] "GET /api/accounts/ HTTP/1.1" 200 216
+[25/Sep/2026 19:32:20] "GET /api/assets/ HTTP/1.1" 200 2
+[25/Sep/2026 19:32:20] "GET /api/transactions/ HTTP/1.1" 200 2
+[25/Sep/2026 19:32:20] "GET /api/categories/ HTTP/1.1" 200 613
+[25/Sep/2026 19:32:20] "GET /api/gold/summary/ HTTP/1.1" 200 115
+[25/Sep/2026 19:32:20] "GET /api/dashboard/ HTTP/1.1" 200 240
+[25/Sep/2026 19:32:20] "GET /api/gold-purchases/ HTTP/1.1" 200 165

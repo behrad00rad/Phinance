@@ -1,0 +1,9 @@
+{
+  "name": "Phinance",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "frontend",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5173, 8000],
+  "portsAttributes": {"5173": {"label": "Phinance web app", "onAutoForward": "openBrowser"}},
+  "features": {"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}}
+}

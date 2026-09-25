@@ -1,0 +1,11 @@
+
+> phinance-frontend@0.1.0 dev
+> vite --host 0.0.0.0 --host 127.0.0.1
+
+
+  VITE v6.4.3  ready in 1152 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+  ➜  press h + enter to show help
+7:22:29 PM [vite] (client) hmr update /src/App.jsx, /src/style.css
+7:22:29 PM [vite] (client) hmr update /src/style.css

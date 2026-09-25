@@ -1,0 +1,53 @@
+7:22:29 PM [vite] Internal server error: Can't resolve '@fontsource/vazirmatn/400.css' in 'D:\Phinance-1\frontend\src'
+  Plugin: @tailwindcss/vite:generate:serve
+  File: D:/Phinance-1/frontend/src/style.css
+      at finishWithoutResolve (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:957:18)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1053:13
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:27:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js:94:43
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:15:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:42:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ConditionalPlugin.js:53:42
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1137:5
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:16:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:39:13
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ModulesUtils.js:123:12
+      at SyncAsyncFileSystemDecorator.stat (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\SyncAsyncFileSystemDecorator.js:66:34)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ModulesUtils.js:99:7
+      at next (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:35:3)
+      at forEachBail (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:49:9)
+      at modulesResolveHandler (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ModulesUtils.js:91:2)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ModulesInHierarchicalDirectoriesPlugin.js:36:6
+      at _next0 (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:8:1)
+      at eval (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:30:1)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\SelfReferencePlugin.js:77:13
+      at Hook.eval [as callAsync] (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:22:1)
+      at Resolver.doResolve (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1134:16)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\ConditionalPlugin.js:42:14
+      at Hook.eval [as callAsync] (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:37:1)
+      at Resolver.doResolve (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1134:16)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\NextPlugin.js:30:14
+      at Hook.eval [as callAsync] (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:7:1)
+      at Resolver.doResolve (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1134:16)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\NextPlugin.js:30:14
+      at Hook.eval [as callAsync] (eval at create (D:\Phinance-1\frontend\node_modules\tapable\lib\HookCodeFactory.js:31:10), <anonymous>:7:1)
+      at Resolver.doResolve (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\Resolver.js:1134:16)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js:85:17
+      at onLevelDone (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:187:22)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:39:13
+      at onJson (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:118:4)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:145:5
+      at SyncAsyncFileSystemDecorator.readJson (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\SyncAsyncFileSystemDecorator.js:204:6)
+      at iterFilename (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:126:24)
+      at next (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:35:3)
+      at forEachBail (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:49:9)
+      at findDescriptionFile (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:200:3)
+      at onLevelDone (D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\DescriptionFileUtils.js:193:10)
+      at D:\Phinance-1\frontend\node_modules\enhanced-resolve\lib\forEachBail.js:39:13
