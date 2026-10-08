@@ -2,7 +2,7 @@
 
 ## Implemented
 
-Household-scoped authenticated API, accounts, categories, transactions, transfers, generic assets, named gold holdings and partial sales, twice-daily Navasan 18 karat price refresh, expected receipts, bills and debts with partial settlements, borrowed and lent loans with fixed interest and monthly schedules, an Insights page, in-app rule-based alerts and history, dashboard summaries, Persian mobile interface, Docker development setup.
+Household-scoped authenticated API, accounts, categories, transactions, transfers, generic assets, named gold holdings and partial sales, twice-daily Navasan 18 karat price refresh, expected receipts, bills and debts with partial settlements, borrowed and lent loans with fixed interest and monthly schedules, incoming/outgoing checks with partial clearing, an Insights page, in-app rule-based alerts and history, dashboard summaries, Persian mobile interface, Docker development setup.
 
 ## Next
 

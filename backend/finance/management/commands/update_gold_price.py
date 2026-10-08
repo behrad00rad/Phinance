@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timezone as datetime_timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from django.core.management.base import BaseCommand, CommandError
 from finance.models import GoldPrice, Household
@@ -13,17 +13,22 @@ from finance.models import GoldPrice, Household
 logger = logging.getLogger(__name__)
 
 
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        return None
+
+
 def fetch_gold_18k_price():
     api_key = os.environ.get("NAVASAN_API_KEY", "").strip()
     if not api_key:
         raise CommandError("Set NAVASAN_API_KEY in your .env file to enable automatic gold prices.")
-    url = "http://api.navasan.tech/latest/?" + urlencode({"api_key": api_key, "item": "18ayar"})
+    url = "https://api.navasan.tech/latest/?" + urlencode({"api_key": api_key, "item": "18ayar"})
     request = Request(url, headers={"Accept": "application/json", "User-Agent": "Phinance/1.0"})
     try:
-        with urlopen(request, timeout=25) as response:
+        with build_opener(NoRedirect()).open(request, timeout=25) as response:
             data = json.loads(response.read().decode("utf-8"))
     except Exception as exc:
-        raise CommandError(f"Could not retrieve the Navasan gold price: {exc}") from exc
+        raise CommandError(f"Could not retrieve the Navasan gold price ({type(exc).__name__}).") from None
     try:
         item = data["18ayar"]
         price = int(Decimal(str(item["value"])).quantize(Decimal("1"), rounding=ROUND_HALF_UP))

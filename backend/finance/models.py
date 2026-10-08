@@ -116,6 +116,46 @@ class ObligationSettlement(models.Model):
     idempotency_key = models.UUIDField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+class Check(models.Model):
+    DIRECTIONS = [("incoming", "چک دریافتی"), ("outgoing", "چک پرداختی")]
+    household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="checks")
+    direction = models.CharField(max_length=8, choices=DIRECTIONS)
+    sender_name = models.CharField(max_length=120)
+    receiver_name = models.CharField(max_length=120)
+    counterparty_account = models.CharField(max_length=120, blank=True)
+    sender_account = models.ForeignKey(Account, null=True, blank=True, on_delete=models.PROTECT, related_name="issued_checks")
+    receiver_account = models.ForeignKey(Account, null=True, blank=True, on_delete=models.PROTECT, related_name="received_checks")
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="checks")
+    amount = models.BigIntegerField()
+    cleared_amount = models.BigIntegerField(default=0)
+    due_date = models.DateField()
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=Q(amount__gt=0), name="check_positive_amount"),
+                       models.CheckConstraint(condition=Q(cleared_amount__gte=0) & Q(cleared_amount__lte=models.F("amount")), name="check_valid_cleared")]
+
+    @property
+    def remaining_amount(self):
+        return self.amount - self.cleared_amount
+
+    @property
+    def status(self):
+        return "cleared" if not self.remaining_amount else "partial" if self.cleared_amount else "pending"
+
+    @property
+    def is_overdue(self):
+        from django.utils import timezone
+        return self.remaining_amount > 0 and self.due_date < timezone.localdate()
+
+class CheckClearing(models.Model):
+    payment_check = models.ForeignKey(Check, on_delete=models.PROTECT, related_name="clearings")
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, related_name="check_clearing")
+    idempotency_key = models.UUIDField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
 class Loan(models.Model):
     DIRECTIONS = [("borrowed", "وام گرفته‌شده"), ("lent", "وام داده‌شده")]
     household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="loans")
@@ -180,6 +220,7 @@ class AlertPreference(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="alert_preference")
     bills = models.BooleanField(default=True)
     loans = models.BooleanField(default=True)
+    checks = models.BooleanField(default=True)
     expected_income = models.BooleanField(default=True)
     high_spending = models.BooleanField(default=True)
     days_ahead = models.PositiveSmallIntegerField(default=7)

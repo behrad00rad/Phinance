@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { api, write } from './api'
 import './alerts.css'
 
-const labels = { bills: 'قبوض', loans: 'اقساط وام', expected_income: 'دریافتی‌های عقب‌افتاده', high_spending: 'هزینه غیرعادی دسته‌ها' }
+const labels = { bills: 'قبوض', loans: 'اقساط وام', checks: 'چک‌های دریافتی و پرداختی', expected_income: 'دریافتی‌های عقب‌افتاده', high_spending: 'هزینه غیرعادی دسته‌ها' }
 const dateLabel = value => value ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' }).format(new Date(value + 'T12:00:00')) : ''
 
 export default function Alerts({ back, onChanged }) {
@@ -35,7 +35,7 @@ export default function Alerts({ back, onChanged }) {
     <section className="preference-card"><h2>تنظیمات هشدار</h2>
       {preferences && <><div className="alert-switches">{Object.entries(labels).map(([key, label]) =>
         <label key={key}><span>{label}</span><input type="checkbox" checked={preferences[key]} disabled={busy} onChange={e => change(key, e.target.checked)}/></label>)}</div>
-        <label className="alert-days">چند روز پیش از سررسید قبوض و اقساط؟ <select value={preferences.days_ahead} disabled={busy} onChange={e => change('days_ahead', Number(e.target.value))}>{[0,1,3,7,14,30,60,90].map(days => <option key={days} value={days}>{new Intl.NumberFormat('fa-IR').format(days)} روز</option>)}</select></label>
+        <label className="alert-days">چند روز پیش از سررسید قبوض، اقساط و چک‌ها؟ <select value={preferences.days_ahead} disabled={busy} onChange={e => change('days_ahead', Number(e.target.value))}>{[0,1,3,7,14,30,60,90].map(days => <option key={days} value={days}>{new Intl.NumberFormat('fa-IR').format(days)} روز</option>)}</select></label>
         <small>دریافتی مورد انتظار فقط پس از گذشت تاریخ آن هشدار می‌دهد. هزینه غیرعادی با دوره مشابه ماه قبل مقایسه می‌شود.</small></>}
     </section>
     <div className="section-title"><h2>تاریخچه اعلان‌ها</h2><span>{new Intl.NumberFormat('fa-IR').format(items.filter(item => !item.read).length)} خوانده‌نشده</span></div>

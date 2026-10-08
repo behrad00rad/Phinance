@@ -6,11 +6,6 @@ export function tehranToday() {
   return `${values.year}-${values.month}-${values.day}`
 }
 
-export function gregorianDateFromPicker(value) {
-  const date = value.toDate()
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
 export function persianDate(value) {
   return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: 'long', day: 'numeric' })
     .format(new Date(`${value}T12:00:00`))

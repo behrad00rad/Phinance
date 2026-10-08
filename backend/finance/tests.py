@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
-from .models import Account, Asset, Category, GoldPrice, GoldPurchase, Household, Loan, LoanInstallment, LoanRepayment, Notification, Obligation, ObligationSettlement, Transaction
+from .models import Account, Asset, Category, Check, CheckClearing, GoldPrice, GoldPurchase, Household, Loan, LoanInstallment, LoanRepayment, Notification, Obligation, ObligationSettlement, Transaction
 from .services import dashboard_summary, gold_summary
 from .loans import fixed_interest
 
@@ -84,6 +84,45 @@ class FinanceTests(TestCase):
         response = self.client.get('/api/notifications/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Notification.objects.filter(kind='high_spending').count(), 1)
+
+    def test_incoming_check_partial_clearing_counts_income_once(self):
+        today = timezone.localdate()
+        data = {'direction': 'incoming', 'sender_name': 'Customer', 'receiver_name': 'Bank',
+                'receiver_account': self.bank.id, 'category': self.income.id, 'amount': 600, 'due_date': today.isoformat()}
+        response = self.client.post('/api/checks/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+        check_id = response.data['id']
+        self.assertEqual(self.bank.balance, 1000)
+        key = str(uuid4())
+        payload = {'amount': 200, 'date': today.isoformat(), 'idempotency_key': key}
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', payload, format='json').status_code, 201)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', payload, format='json').status_code, 200)
+        self.assertEqual(CheckClearing.objects.count(), 1)
+        self.assertEqual(self.bank.balance, 1200)
+        self.assertEqual(self.client.get(f'/api/checks/{check_id}/').data['remaining_amount'], 400)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', {'amount': 401, 'date': today.isoformat(), 'idempotency_key': str(uuid4())}, format='json').status_code, 400)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', {'amount': 400, 'date': today.isoformat(), 'idempotency_key': str(uuid4())}, format='json').status_code, 201)
+        self.assertEqual(self.client.get(f'/api/checks/{check_id}/').data['status'], 'cleared')
+        self.assertEqual(self.bank.balance, 1600)
+        self.assertEqual(self.client.get('/api/dashboard/').data['monthly_income'], 600)
+
+    def test_outgoing_check_alert_preference_and_isolation(self):
+        today = timezone.localdate()
+        data = {'direction': 'outgoing', 'sender_name': 'Bank', 'receiver_name': 'Seller',
+                'sender_account': self.bank.id, 'category': self.expense.id, 'amount': 700, 'due_date': (today + timedelta(days=2)).isoformat()}
+        response = self.client.post('/api/checks/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+        check_id = response.data['id']
+        self.assertEqual(self.client.get('/api/notifications/').data['items'][0]['kind'], 'check_upcoming')
+        self.assertEqual(self.client.patch('/api/alert-preferences/', {'checks': False}, format='json').status_code, 200)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', {'amount': 1001, 'date': today.isoformat(), 'idempotency_key': str(uuid4())}, format='json').status_code, 400)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', {'amount': 700, 'date': today.isoformat(), 'idempotency_key': str(uuid4())}, format='json').status_code, 201)
+        self.assertEqual(self.bank.balance, 300)
+        self.assertEqual(self.client.get('/api/dashboard/').data['monthly_expense'], 700)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.get('/api/checks/').data, [])
+        self.assertEqual(self.client.get(f'/api/checks/{check_id}/').status_code, 404)
+        self.assertEqual(self.client.post(f'/api/checks/{check_id}/clear/', {'amount': 1, 'date': today.isoformat(), 'idempotency_key': str(uuid4())}, format='json').status_code, 404)
 
     def test_balances_and_monthly_summary(self):
         self.add_transaction("income", 500, destination=self.bank, category=self.income)
@@ -406,3 +445,83 @@ class FinanceTests(TestCase):
         self.assertEqual(report["net_worth_history"][-1]["value"], 1750)
         self.assertTrue(report["net_worth_estimated"])
         self.assertEqual(dashboard_summary(self.household)["net_worth"], 1750)
+
+    def test_edit_delete_obligation_and_payment_reverses_cash_once(self):
+        item_id = self.create_obligation("expected_payment", 600, destination_account=self.bank.id, category=self.income.id)
+        payment = self.settle_obligation(item_id, 200).data["settlements"][0]
+        path = f"/api/obligations/{item_id}/settlements/{payment['id']}/"
+        response = self.client.patch(path, {"amount": 300, "date": str(timezone.localdate()), "account": self.bank.id}, format="json")
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual((self.bank.balance, dashboard_summary(self.household)["monthly_income"]), (1300, 300))
+        self.assertEqual(self.client.patch(f"/api/obligations/{item_id}/", {"amount": 250}, format="json").status_code, 400)
+        self.assertEqual(self.client.delete(path).status_code, 204)
+        self.assertEqual(self.bank.balance, 1000)
+        self.assertEqual(dashboard_summary(self.household)["monthly_income"], 0)
+        self.assertEqual(self.client.delete(f"/api/obligations/{item_id}/").status_code, 204)
+
+    def test_edit_delete_check_and_loan_repayments(self):
+        today = str(timezone.localdate())
+        check = self.client.post("/api/checks/", {"direction": "incoming", "sender_name": "Client", "receiver_name": "Bank",
+            "receiver_account": self.bank.id, "category": self.income.id, "amount": 500, "due_date": today}, format="json").data
+        clearing = self.client.post(f"/api/checks/{check['id']}/clear/", {"amount": 200, "date": today,
+            "idempotency_key": str(uuid4())}, format="json").data["clearings"][0]
+        path = f"/api/checks/{check['id']}/clearings/{clearing['id']}/"
+        self.assertEqual(self.client.patch(path, {"amount": 250, "date": today}, format="json").status_code, 200)
+        self.assertEqual(self.bank.balance, 1250)
+        self.assertEqual(self.client.delete(f"/api/checks/{check['id']}/").status_code, 204)
+        self.assertEqual(self.bank.balance, 1000)
+        loan = self.create_loan("borrowed", 500, origination_account=self.bank.id)
+        repayment = self.repay_loan(loan["id"], 200).data["repayments"][0]
+        path = f"/api/loans/{loan['id']}/repayments/{repayment['id']}/"
+        changed = self.client.patch(path, {"amount": 300, "date": today, "account": self.bank.id,
+            "idempotency_key": str(uuid4())}, format="json")
+        self.assertEqual(changed.status_code, 200, changed.data)
+        self.assertEqual((self.bank.balance, changed.data["remaining_principal"]), (1200, 200))
+        self.assertEqual(self.client.delete(f"/api/loans/{loan['id']}/").status_code, 204)
+        self.assertEqual(self.bank.balance, 1000)
+
+    def test_deleting_incoming_record_rejects_negative_balance_and_foreign_edit(self):
+        tx = self.add_transaction("income", 300, destination=self.bank, category=self.income)
+        self.add_transaction("expense", 1200, source=self.bank, category=self.expense)
+        response = self.client.delete(f"/api/transactions/{tx.id}/")
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(Transaction.objects.filter(pk=tx.pk).exists())
+        self.assertEqual(self.bank.balance, 100)
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self.client.patch(f"/api/transactions/{tx.id}/", {"amount": 1}, format="json").status_code, 404)
+
+    def test_edit_gold_purchase_and_sale_then_delete_restores_weight_and_cash(self):
+        today = str(timezone.localdate())
+        purchase = self.client.post("/api/gold-purchases/", {"name": "Ring", "purchase_date": today,
+            "weight_grams": "2.000", "amount_paid": 400}, format="json").data
+        sale = self.client.post("/api/gold-sales/", {"purchase": purchase["id"], "account": self.bank.id,
+            "sale_date": today, "weight_grams": "1.000", "price_per_gram": 300}, format="json").data
+        response = self.client.patch(f"/api/gold-sales/{sale['id']}/", {"weight_grams": "1.500",
+            "price_per_gram": 300}, format="json")
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(self.bank.balance, 1450)
+        self.assertEqual(self.client.get(f"/api/gold-purchases/{purchase['id']}/").data["remaining_weight_grams"], "0.500")
+        self.assertEqual(self.client.patch(f"/api/gold-purchases/{purchase['id']}/", {"weight_grams": "1.000"}, format="json").status_code, 400)
+        self.assertEqual(self.client.delete(f"/api/gold-sales/{sale['id']}/").status_code, 204)
+        self.assertEqual(self.bank.balance, 1000)
+        self.assertEqual(self.client.delete(f"/api/gold-purchases/{purchase['id']}/").status_code, 204)
+
+    def test_unpaid_loan_terms_can_be_edited_and_paid_terms_are_locked(self):
+        loan = self.create_loan("lent", 500)
+        change = self.client.patch(f"/api/loans/{loan['id']}/", {"original_principal": 600,
+            "installment_count": 2, "first_due_date": str(timezone.localdate() + timedelta(days=30))}, format="json")
+        self.assertEqual(change.status_code, 200, change.data)
+        self.assertEqual((change.data["remaining_principal"], len(change.data["installments"])), (600, 2))
+        self.repay_loan(loan["id"], 100)
+        self.assertEqual(self.client.patch(f"/api/loans/{loan['id']}/", {"original_principal": 700}, format="json").status_code, 400)
+        self.assertEqual(self.client.patch(f"/api/loans/{loan['id']}/", {"party": "New name"}, format="json").status_code, 200)
+
+    def test_category_edit_delete_respects_financial_history(self):
+        created = self.client.post("/api/categories/", {"name": "Custom", "type": "expense"}, format="json")
+        self.assertEqual(created.status_code, 201, created.data)
+        category_id = created.data["id"]
+        self.assertEqual(self.client.patch(f"/api/categories/{category_id}/", {"name": "Edited"}, format="json").status_code, 200)
+        self.assertEqual(self.client.delete(f"/api/categories/{category_id}/").status_code, 204)
+        self.add_transaction("expense", 100, source=self.bank, category=self.expense)
+        self.assertEqual(self.client.delete(f"/api/categories/{self.expense.id}/").status_code, 400)
+        self.assertEqual(self.client.patch(f"/api/categories/{self.expense.id}/", {"type": "income"}, format="json").status_code, 400)

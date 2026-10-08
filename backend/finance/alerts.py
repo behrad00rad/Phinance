@@ -4,7 +4,7 @@ import jdatetime
 from django.db.models import F, Sum
 from django.utils import timezone
 
-from .models import AlertPreference, Loan, Notification, Obligation, Transaction
+from .models import AlertPreference, Check, Loan, Notification, Obligation, Transaction
 
 
 def preferences_for(user):
@@ -54,6 +54,16 @@ def sync_alerts(user, household):
                 title = "قسط وام عقب‌افتاده" if overdue else "سررسید قسط وام نزدیک است"
                 add(f"{kind}:{installment.id}:{installment.due_date}", kind, title,
                     f"{loan.party} · مانده قسط {remaining:,} تومان", installment.due_date)
+
+    if preferences.checks:
+        for check in Check.objects.filter(household=household, cleared_amount__lt=F("amount"), due_date__lte=horizon):
+            overdue = check.due_date < today
+            kind = "check_overdue" if overdue else "check_upcoming"
+            title = "چک سررسیدگذشته" if overdue else "سررسید چک نزدیک است"
+            direction = "دریافتی" if check.direction == "incoming" else "پرداختی"
+            add(f"{kind}:{check.id}:{check.due_date}", kind, title,
+                f"چک {direction} · {check.sender_name} ← {check.receiver_name} · مانده {check.remaining_amount:,} تومان",
+                check.due_date)
 
     if preferences.high_spending:
         current = jdatetime.date.fromgregorian(date=today)

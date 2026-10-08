@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Account, Asset, Category, GoldPrice, GoldPurchase, GoldSale, Loan, LoanInstallment, LoanRepayment, Obligation, ObligationSettlement, Transaction
+from .models import Account, Asset, Category, Check, CheckClearing, GoldPrice, GoldPurchase, GoldSale, Loan, LoanInstallment, LoanRepayment, Obligation, ObligationSettlement, Transaction
 from .loans import equal_installment_amounts, fixed_interest, monthly_due_dates
 from django.utils import timezone
 
@@ -24,9 +24,10 @@ class TransactionSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
     source_name = serializers.CharField(source="source_account.name", read_only=True)
     destination_name = serializers.CharField(source="destination_account.name", read_only=True)
+    is_linked = serializers.SerializerMethodField()
     class Meta:
         model = Transaction
-        fields = ["id", "type", "amount", "date", "source_account", "destination_account", "category", "category_name", "source_name", "destination_name", "description", "created_at"]
+        fields = ["id", "type", "amount", "date", "source_account", "destination_account", "category", "category_name", "source_name", "destination_name", "description", "is_linked", "created_at"]
         read_only_fields = ["created_at"]
 
     def validate(self, attrs):
@@ -45,19 +46,29 @@ class TransactionSerializer(serializers.ModelSerializer):
             tx.clean()
         except ValidationError as exc:
             raise serializers.ValidationError(exc.message_dict)
-        for account in (tx.source_account, tx.destination_account):
-            if account and not account.active:
+        for field in ("source_account", "destination_account"):
+            account = getattr(tx, field)
+            if account and not account.active and (not self.instance or account.pk != getattr(self.instance, f"{field}_id")):
                 raise serializers.ValidationError("حساب غیرفعال است.")
         return attrs
+
+    def get_is_linked(self, obj):
+        return (hasattr(obj, "obligation_settlement") or hasattr(obj, "check_clearing")
+                or hasattr(obj, "originated_loan") or hasattr(obj, "loan_principal_repayment")
+                or hasattr(obj, "loan_interest_repayment"))
 
 class ObligationSettlementSerializer(serializers.ModelSerializer):
     amount = serializers.IntegerField(source="transaction.amount", read_only=True)
     date = serializers.DateField(source="transaction.date", read_only=True)
     account_name = serializers.SerializerMethodField()
+    account = serializers.SerializerMethodField()
 
     class Meta:
         model = ObligationSettlement
-        fields = ["id", "amount", "date", "account_name", "created_at"]
+        fields = ["id", "amount", "date", "account", "account_name", "created_at"]
+
+    def get_account(self, obj):
+        return obj.transaction.destination_account_id or obj.transaction.source_account_id
 
     def get_account_name(self, obj):
         account = obj.transaction.destination_account or obj.transaction.source_account
@@ -86,11 +97,11 @@ class ObligationSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         household = self.context["household"]
-        kind = attrs["kind"]
-        account = attrs.get("destination_account")
-        category = attrs.get("category")
+        kind = attrs.get("kind", getattr(self.instance, "kind", None))
+        account = attrs.get("destination_account", getattr(self.instance, "destination_account", None))
+        category = attrs.get("category", getattr(self.instance, "category", None))
         if kind == "expected_payment":
-            if not account or account.household_id != household.id or not account.active:
+            if not account or account.household_id != household.id or (not account.active and (not self.instance or account.pk != self.instance.destination_account_id)):
                 raise serializers.ValidationError({"destination_account": "یک حساب فعال از خانواده خود انتخاب کنید."})
             if not category or category.household_id != household.id or category.type != "income":
                 raise serializers.ValidationError({"category": "یک دسته درآمد از خانواده خود انتخاب کنید."})
@@ -109,20 +120,71 @@ class SettleObligationSerializer(serializers.Serializer):
     account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), required=False)
     idempotency_key = serializers.UUIDField()
 
+class CheckClearingSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField(source="transaction.amount", read_only=True)
+    date = serializers.DateField(source="transaction.date", read_only=True)
+
+    class Meta:
+        model = CheckClearing
+        fields = ["id", "amount", "date", "created_at"]
+
+class CheckSerializer(serializers.ModelSerializer):
+    sender_account_name = serializers.CharField(source="sender_account.name", read_only=True)
+    receiver_account_name = serializers.CharField(source="receiver_account.name", read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    remaining_amount = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
+    clearings = CheckClearingSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Check
+        fields = ["id", "direction", "sender_name", "receiver_name", "counterparty_account", "sender_account", "sender_account_name",
+                  "receiver_account", "receiver_account_name", "category", "category_name", "amount", "cleared_amount",
+                  "remaining_amount", "due_date", "notes", "status", "is_overdue", "clearings", "created_at"]
+        read_only_fields = ["cleared_amount", "created_at"]
+        extra_kwargs = {"amount": {"min_value": 1}}
+
+    def validate(self, attrs):
+        household = self.context["household"]
+        direction = attrs.get("direction", getattr(self.instance, "direction", None))
+        for field in ("sender_name", "receiver_name"):
+            value = attrs.get(field, getattr(self.instance, field, "")).strip()
+            if not value:
+                raise serializers.ValidationError({field: "نام فرستنده و گیرنده را وارد کنید."})
+            if field in attrs: attrs[field] = value
+        own = "receiver_account" if direction == "incoming" else "sender_account"
+        other = "sender_account" if direction == "incoming" else "receiver_account"
+        account = attrs.get(own, getattr(self.instance, own, None))
+        current_account_id = getattr(self.instance, f"{own}_id", None)
+        if not account or account.household_id != household.id or (not account.active and account.pk != current_account_id):
+            raise serializers.ValidationError({own: "حساب فعال خانواده را انتخاب کنید."})
+        if attrs.get(other, getattr(self.instance, other, None)):
+            raise serializers.ValidationError({other: "حساب طرف مقابل در خانواده ثبت نمی‌شود."})
+        category = attrs.get("category", getattr(self.instance, "category", None))
+        if category.household_id != household.id or category.type != ("income" if direction == "incoming" else "expense"):
+            raise serializers.ValidationError({"category": "دسته با جهت چک و خانواده سازگار نیست."})
+        return attrs
+
+class ClearCheckSerializer(serializers.Serializer):
+    amount = serializers.IntegerField(min_value=1)
+    date = serializers.DateField()
+    idempotency_key = serializers.UUIDField()
+
 class LoanRepaymentSerializer(serializers.ModelSerializer):
     amount = serializers.SerializerMethodField()
     account_name = serializers.CharField(source="account.name", read_only=True)
 
     class Meta:
         model = LoanRepayment
-        fields = ["id", "date", "amount", "principal_amount", "interest_amount", "account_name", "created_at"]
+        fields = ["id", "date", "amount", "principal_amount", "interest_amount", "account", "account_name", "created_at"]
 
     def get_amount(self, obj):
         return obj.principal_amount + obj.interest_amount
 
 class LoanSerializer(serializers.ModelSerializer):
-    installment_count = serializers.IntegerField(write_only=True, min_value=1, max_value=120, required=False)
-    first_due_date = serializers.DateField(write_only=True, required=False)
+    installment_count = serializers.IntegerField(write_only=True, min_value=1, max_value=120, required=False, allow_null=True)
+    first_due_date = serializers.DateField(write_only=True, required=False, allow_null=True)
     remaining_principal = serializers.IntegerField(read_only=True)
     remaining_interest = serializers.IntegerField(read_only=True)
     remaining_balance = serializers.IntegerField(read_only=True)
@@ -166,17 +228,18 @@ class LoanSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         household = self.context["household"]
-        account = attrs.get("origination_account")
-        if account and (account.household_id != household.id or not account.active):
+        account = attrs.get("origination_account", getattr(self.instance, "origination_account", None))
+        if account and (account.household_id != household.id or (not account.active and (not self.instance or account.pk != self.instance.origination_account_id))):
             raise serializers.ValidationError({"origination_account": "یک حساب فعال از خانواده خود انتخاب کنید."})
-        count = attrs.get("installment_count")
-        first = attrs.get("first_due_date")
+        existing_dates = list(self.instance.installments.values_list("due_date", flat=True)) if self.instance else []
+        count = attrs.get("installment_count", len(existing_dates) or None)
+        first = attrs.get("first_due_date", existing_dates[0] if existing_dates else None)
         if bool(count) != bool(first):
             raise serializers.ValidationError({"first_due_date": "تعداد اقساط و تاریخ اولین قسط را با هم وارد کنید."})
-        start = attrs["start_date"]
+        start = attrs.get("start_date", getattr(self.instance, "start_date", None))
         if start > timezone.localdate():
             raise serializers.ValidationError({"start_date": "تاریخ شروع وام نمی‌تواند در آینده باشد."})
-        maturity = attrs.get("maturity_date")
+        maturity = attrs.get("maturity_date", getattr(self.instance, "maturity_date", None))
         dates = monthly_due_dates(first, count) if count else []
         if first and first <= start:
             raise serializers.ValidationError({"first_due_date": "اولین قسط باید بعد از تاریخ شروع باشد."})
@@ -187,10 +250,12 @@ class LoanSerializer(serializers.ModelSerializer):
             attrs["maturity_date"] = maturity
         if maturity and maturity <= start:
             raise serializers.ValidationError({"maturity_date": "تاریخ پایان باید بعد از تاریخ شروع باشد."})
-        if attrs.get("annual_interest_rate") and not maturity:
+        rate = attrs.get("annual_interest_rate", getattr(self.instance, "annual_interest_rate", None))
+        principal = attrs.get("original_principal", getattr(self.instance, "original_principal", None))
+        if rate and not maturity:
             raise serializers.ValidationError({"maturity_date": "برای محاسبه سود، تاریخ پایان یا برنامه اقساط لازم است."})
-        interest = fixed_interest(attrs["original_principal"], attrs.get("annual_interest_rate"), start, maturity)
-        if count and attrs["original_principal"] + interest < count:
+        interest = fixed_interest(principal, rate, start, maturity)
+        if count and principal + interest < count:
             raise serializers.ValidationError({"installment_count": "تعداد اقساط از مبلغ کل بیشتر است."})
         attrs["_dates"] = dates
         attrs["_interest"] = interest
@@ -207,6 +272,23 @@ class LoanSerializer(serializers.ModelSerializer):
             LoanInstallment.objects.bulk_create([LoanInstallment(loan=loan, due_date=due, amount=amount)
                                                  for due, amount in zip(dates, amounts)])
         return loan
+
+    def update(self, instance, validated_data):
+        dates = validated_data.pop("_dates")
+        interest = validated_data.pop("_interest")
+        schedule_changed = "installment_count" in validated_data or "first_due_date" in validated_data
+        validated_data.pop("installment_count", None)
+        validated_data.pop("first_due_date", None)
+        terms_changed = schedule_changed or any(field in validated_data for field in
+                                                ("direction", "original_principal", "start_date", "maturity_date", "annual_interest_rate"))
+        if terms_changed:
+            validated_data["total_interest"] = interest
+            instance.installments.all().delete()
+            if dates:
+                amounts = equal_installment_amounts(validated_data.get("original_principal", instance.original_principal) + interest, len(dates))
+                LoanInstallment.objects.bulk_create([LoanInstallment(loan=instance, due_date=due, amount=amount)
+                                                     for due, amount in zip(dates, amounts)])
+        return super().update(instance, validated_data)
 
 class RepayLoanSerializer(serializers.Serializer):
     amount = serializers.IntegerField(min_value=1)
@@ -265,9 +347,9 @@ class GoldPurchaseSerializer(serializers.ModelSerializer):
         return self.get_current_value(obj) - self.get_invested_remaining(obj)
 
     def validate(self, attrs):
-        if attrs.get("weight_grams", 0) <= 0 or attrs.get("amount_paid", 0) <= 0:
+        if attrs.get("weight_grams", getattr(self.instance, "weight_grams", 0)) <= 0 or attrs.get("amount_paid", getattr(self.instance, "amount_paid", 0)) <= 0:
             raise serializers.ValidationError("وزن و مبلغ خرید باید بیشتر از صفر باشند.")
-        if not attrs.get("name", "").strip():
+        if not attrs.get("name", getattr(self.instance, "name", "")).strip():
             raise serializers.ValidationError({"name": "نام طلا را وارد کنید."})
         return attrs
 
@@ -278,7 +360,7 @@ class GoldPurchaseSerializer(serializers.ModelSerializer):
 class GoldSaleSerializer(serializers.ModelSerializer):
     purchase = serializers.PrimaryKeyRelatedField(queryset=GoldPurchase.objects.all())
     account = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all())
-    price_per_gram = serializers.IntegerField(write_only=True, min_value=1)
+    price_per_gram = serializers.IntegerField(write_only=True, min_value=1, required=False)
     holding_name = serializers.CharField(source="purchase.name", read_only=True)
     class Meta:
         model = GoldSale
@@ -289,17 +371,27 @@ class GoldSaleSerializer(serializers.ModelSerializer):
         validated_data.pop("price_per_gram", None)
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        validated_data.pop("price_per_gram", None)
+        return super().update(instance, validated_data)
+
     def validate(self, attrs):
-        purchase = attrs["purchase"]
+        purchase = attrs.get("purchase", getattr(self.instance, "purchase", None))
         if purchase.household_id != self.context["household"].id:
             raise serializers.ValidationError({"purchase": "این طلا متعلق به خانواده شما نیست."})
-        account = attrs["account"]
-        if account.household_id != self.context["household"].id or not account.active:
+        account = attrs.get("account", getattr(self.instance, "account", None))
+        if account.household_id != self.context["household"].id or (not account.active and (not self.instance or account.pk != self.instance.account_id)):
             raise serializers.ValidationError({"account": "یک حساب فعال از خانواده خود انتخاب کنید."})
-        if attrs["weight_grams"] <= 0:
+        weight = attrs.get("weight_grams", getattr(self.instance, "weight_grams", None))
+        if weight is None or weight <= 0:
             raise serializers.ValidationError({"weight_grams": "وزن فروش باید بیشتر از صفر باشد."})
-        if attrs["weight_grams"] > purchase.remaining_weight_grams:
+        available = purchase.remaining_weight_grams + (self.instance.weight_grams if self.instance and purchase.pk == self.instance.purchase_id else 0)
+        if weight > available:
             raise serializers.ValidationError({"weight_grams": "وزن فروش از مقدار طلای باقی‌مانده بیشتر است."})
+        if not self.instance and not attrs.get("price_per_gram"):
+            raise serializers.ValidationError({"price_per_gram": "قیمت فروش هر گرم را وارد کنید."})
+        if self.instance and weight != self.instance.weight_grams and not attrs.get("price_per_gram"):
+            raise serializers.ValidationError({"price_per_gram": "برای تغییر وزن، قیمت فروش هر گرم را نیز وارد کنید."})
         return attrs
 
 class GoldPriceSerializer(serializers.ModelSerializer):

@@ -1,0 +1,4 @@
+.jalali-pickers { display: flex; flex: 1; gap: 5px; min-width: 0; }
+.jalali-pickers select { min-width: 0; width: 50%; height: 39px; border: 1px solid #dce5dd; border-radius: 9px; background: #fff; color: #20392f; text-align: center; font: inherit; font-size: 13px; }
+html[data-theme="dark"] .jalali-pickers select { background: #244938; border-color: #41634e; color: #e0eee4; }
+@media (max-width: 500px) { .jalali-month-bar { flex-wrap: wrap; } .jalali-pickers { order: -1; flex-basis: 100%; } .jalali-month-bar .jalali-today { margin-right: auto; } }

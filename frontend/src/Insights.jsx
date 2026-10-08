@@ -24,6 +24,7 @@ function NetWorthChart({ points }) {
 
 export default function Insights({ back }) {
   const [report, setReport] = useState(null)
+  const [view, setView] = useState('cashflow')
   const [range, setRange] = useState({ start: '', end: '' })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -59,15 +60,16 @@ export default function Insights({ back }) {
       <div className="insights-totals"><div><small>درآمد واقعی</small><strong className="positive">{toman(report.totals.income)}</strong></div>
         <div><small>هزینه واقعی</small><strong className="negative">{toman(report.totals.expense)}</strong></div>
         <div><small>خالص جریان پول</small><strong>{toman(report.totals.net)}</strong></div></div>
-      <section className="insights-panel"><h2>دخل‌وخرج ماهانه</h2><p className="insights-caption">ماه‌های شمسی در بازه انتخاب‌شده؛ فقط تراکنش‌های ثبت‌شده</p>
+      <div className="report-tabs" role="tablist" aria-label="بخش گزارش">{[['cashflow','روند ماهانه'],['categories','دسته‌ها'],['due','سررسیدها'],['loans','وام‌ها'],['networth','خالص دارایی']].map(([id,label]) => <button key={id} role="tab" aria-selected={view === id} className={view === id ? 'active' : ''} onClick={() => setView(id)}>{label}</button>)}</div>
+      {view === 'cashflow' && <section className="insights-panel"><h2>دخل‌وخرج ماهانه</h2><p className="insights-caption">ماه‌های شمسی در بازه انتخاب‌شده؛ فقط تراکنش‌های ثبت‌شده</p>
         {!hasCashFlow ? <div className="empty">در این بازه درآمد یا هزینه‌ای ثبت نشده است.</div> :
           <div className="insights-monthly">{report.monthly.map(row => <div className="insights-month" key={`${row.year}-${row.month}`}>
             <div className="insights-month-head"><strong>{row.label}</strong><span>خالص {toman(row.net)}</span></div>
             <div className="insights-bar-line"><span>درآمد</span><div className="insights-track"><div className="insights-bar income" style={{ width: `${row.income / maxMonthly * 100}%` }}/></div><b>{toman(row.income)}</b></div>
             <div className="insights-bar-line"><span>هزینه</span><div className="insights-track"><div className="insights-bar expense" style={{ width: `${row.expense / maxMonthly * 100}%` }}/></div><b>{toman(row.expense)}</b></div>
           </div>)}</div>}
-      </section>
-      <section className="insights-panel"><h2>هزینه‌ها بر اساس دسته</h2>
+      </section>}
+      {view === 'categories' && <section className="insights-panel"><h2>هزینه‌ها بر اساس دسته</h2>
         <p className="insights-caption">مقایسه با دوره قبلیِ هم‌طول: {persianDate(report.previous_start)} تا {persianDate(report.previous_end)}</p>
         {!report.expense_categories.length ? <div className="empty">هزینه‌ای در این دوره یا دوره قبلی ثبت نشده است.</div> :
           <div className="insights-categories">{report.expense_categories.map(row => <div className="insights-category" key={row.category_id ?? row.name}>
@@ -75,8 +77,8 @@ export default function Insights({ back }) {
             <div className="insights-track"><div className="insights-bar expense" style={{ width: `${row.amount / maxCategory * 100}%` }}/></div>
             <div className="insights-track"><div className="insights-bar previous" style={{ width: `${row.previous_amount / maxCategory * 100}%` }}/></div>
             <small>دوره قبلی: {toman(row.previous_amount)}</small></div>)}</div>}
-      </section>
-      <section className="insights-panel"><h2>سررسیدها</h2><p className="insights-caption">مبلغ‌های برنامه‌ریزی‌شده جدا از جریان پول واقعی؛ پیش رو تا {report.due.next_days} روز آینده</p>
+      </section>}
+      {view === 'due' && <section className="insights-panel"><h2>سررسیدها</h2><p className="insights-caption">مبلغ‌های برنامه‌ریزی‌شده جدا از جریان پول واقعی؛ پیش رو تا {report.due.next_days} روز آینده</p>
         <div className="insights-due-grid">{[['bill','قبوض'],['expected_payment','دریافتی‌های مورد انتظار']].map(([kind,label]) => {
           const row = report.due.totals[kind]
           return <div key={kind}><strong>{label}</strong><small>در پیش: {row.upcoming_count} مورد · {toman(row.upcoming_amount)}</small>
@@ -84,16 +86,16 @@ export default function Insights({ back }) {
         })}</div>
         {report.due.items.length > 0 && <div className="insights-due-list">{report.due.items.map(item => <div key={item.id}>
           <span>{item.counterparty} · {persianDate(item.due_date)}</span><b>{toman(item.remaining_amount)}</b></div>)}</div>}
-      </section>
-      <section className="insights-panel"><h2>مانده وام‌ها</h2><div className="insights-due-grid">
+      </section>}
+      {view === 'loans' && <section className="insights-panel"><h2>مانده وام‌ها</h2><div className="insights-due-grid">
         {[["borrowed","وام‌های گرفته‌شده"],["lent","وام‌های داده‌شده"]].map(([direction,label]) => {
           const row = report.loans[direction]
           return <div key={direction}><strong>{label} · {row.count} مورد</strong><small>اصل: {toman(row.principal)}</small>
             <small>سود: {toman(row.interest)}</small><b>کل مانده: {toman(row.total)}</b></div>
-        })}</div></section>
-      <section className="insights-panel"><h2>روند برآورد خالص دارایی</h2>
+        })}</div></section>}
+      {view === 'networth' && <section className="insights-panel"><h2>روند برآورد خالص دارایی</h2>
         <p className="insights-caption">مانده حساب‌ها، اصل طلب و بدهی، دارایی‌ها و طلا در پایان هر ماه شمسی. ارزش فعلی دارایی و قیمت فعلی طلا برای ماه‌های گذشته نیز استفاده شده است؛ این نمودار ارزش تاریخی دقیق نیست.</p>
-        <NetWorthChart points={report.net_worth_history}/></section>
+        <NetWorthChart points={report.net_worth_history}/></section>}
     </>}
   </>
 }
